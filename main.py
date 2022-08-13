@@ -61,7 +61,7 @@ async def connect_forever():
                     f'Error while subscribing and connecting: {e}')
             finally:
                 print(f'Reconnect after {5} seconds...')
-                sleep(5)
+                await asyncio.sleep(5)
 
 
 async def connect_ws(session: aiohttp.ClientSession):
@@ -100,7 +100,7 @@ async def main():
 
     try:
         await asyncio.gather(
-            connect_forever(room_list=room_list),
+            connect_forever(),
             subscribe_forever(room_list=room_list)
         )
     except Exception as e:
