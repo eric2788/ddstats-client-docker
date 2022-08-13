@@ -22,21 +22,20 @@ async def get_room_list():
             return [r['room_id'] for _, r in vups if r['room_id'] > 0]
 
 
-
 async def get_subscribed():
-    headers = { "Authorization": ID }
+    headers = {"Authorization": ID}
     async with aiohttp.ClientSession() as session:
-        while True:
-            await asyncio.sleep(60)
-            async with session.get(f'{"https" if USE_TLS == "true" else "http"}://{BILIGO_HOST}/subscribe', headers=headers) as resp:
-                if resp.status != 200:
-                    raise Exception(f"Failed to get subscribed: {resp.status}")
-                return await resp.json()
+        async with session.get(f'{"https" if USE_TLS == "true" else "http"}://{BILIGO_HOST}/subscribe', headers=headers) as resp:
+            if resp.status != 200:
+                raise Exception(f"Failed to get subscribed: {resp.status}")
+            return await resp.json()
+
 
 async def subscribe_forever(room_list: List[int]):
     async with aiohttp.ClientSession() as session:
         while True:
             try:
+                await asyncio.sleep(60)
                 print(f'Checking subscribed rooms...')
                 resp = await get_subscribed()
                 if not resp or len(resp) == 0:
@@ -50,6 +49,7 @@ async def subscribe_forever(room_list: List[int]):
             finally:
                 print(f'Reconnect after {5} seconds...')
                 sleep(5)
+
 
 async def connect_forever():
     async with aiohttp.ClientSession() as session:
