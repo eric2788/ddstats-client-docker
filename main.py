@@ -40,15 +40,17 @@ async def subscribe_forever(room_list: List[int]):
                 resp = await get_subscribed()
                 if not resp or len(resp) == 0:
                     print(f'Subscribed is empty, resubscribing...')
-                    await subscribe(room_list=room_list, session=session)
+                    while True:
+                        try:
+                            await subscribe(room_list=room_list, session=session)
+                            break
+                        except Exception as e:
+                            print(f'Reconnect after {5} seconds...')
+                            sleep(5)
                 else:
                     print(f'Subscribing {len(resp)} rooms')
             except Exception as e:
-                print(
-                    f'Error while subscribing: {e}')
-            finally:
-                print(f'Reconnect after {5} seconds...')
-                sleep(5)
+                print(f'Error while checking subscribing rooms: {e}')
 
 
 async def connect_forever():
