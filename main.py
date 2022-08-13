@@ -22,14 +22,40 @@ async def get_room_list():
             return [r['room_id'] for _, r in vups if r['room_id'] > 0]
 
 
-async def subscribe_and_connect_forever(room_list: List[int]):
+
+async def get_subscribed():
+    headers = { "Authorization": ID }
+    async with aiohttp.ClientSession() as session:
+        while True:
+            await asyncio.sleep(60)
+            async with session.get(f'{"https" if USE_TLS == "true" else "http"}://{BILIGO_HOST}/subscribe', headers=headers) as resp:
+                if resp.status != 200:
+                    raise Exception(f"Failed to get subscribed: {resp.status}")
+                return await resp.json()
+
+async def subscribe_forever(room_list: List[int]):
     async with aiohttp.ClientSession() as session:
         while True:
             try:
-                await asyncio.gather(
-                    subscribe(room_list=room_list, session=session),
-                    connect_ws(session=session)
-                )
+                print(f'Checking subscribed rooms...')
+                resp = await get_subscribed()
+                if not resp or len(resp) == 0:
+                    print(f'Subscribed is empty, resubscribing...')
+                    await subscribe(room_list=room_list, session=session)
+                else:
+                    print(f'Subscribing {len(resp)} rooms')
+            except Exception as e:
+                print(
+                    f'Error while subscribing: {e}')
+            finally:
+                print(f'Reconnect after {5} seconds...')
+                sleep(5)
+
+async def connect_forever():
+    async with aiohttp.ClientSession() as session:
+        while True:
+            try:
+                await connect_ws(session=session)
             except Exception as e:
                 print(
                     f'Error while subscribing and connecting: {e}')
@@ -73,7 +99,10 @@ async def main():
         return
 
     try:
-        await subscribe_and_connect_forever(room_list=room_list)
+        await asyncio.gather(
+            connect_forever(room_list=room_list),
+            subscribe_forever(room_list=room_list)
+        )
     except Exception as e:
         print(f'Error while connect to biligo-live-ws: {e}')
         return
