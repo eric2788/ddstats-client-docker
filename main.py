@@ -60,6 +60,29 @@ async def subscribe_forever(room_list: List[int]):
             except Exception as e:
                 print(f'Error while checking subscribing rooms: {e}')
 
+async def subscribe_latest_rooms(old_room_list: List[int] = []):
+    async with aiohttp.ClientSession() as session:
+        last_rooms = old_room_list
+        while True:
+            try:
+                await asyncio.sleep(86400)
+                print(f'refetching latest rooms...')
+                latest_rooms = await get_room_list()
+                if latest_rooms == last_rooms:
+                    print(f'no changes detected, skipped.')
+                    continue
+                print(f'a new change has been detected ({len(last_rooms)} -> {len(latest_rooms)}), resubscribing...')
+                last_rooms = latest_rooms
+                while True:
+                    try:
+                        await subscribe(room_list=latest_rooms, session=session)
+                        break
+                    except Exception as e:
+                        print(f'Reconnect after {5} seconds...')
+                        sleep(5)
+            except Exception as e:
+                print(f'error while fetching latest rooms: {e}')
+
 
 async def connect_forever():
     async with aiohttp.ClientSession() as session:
@@ -119,7 +142,8 @@ async def main():
     try:
         await asyncio.gather(
             connect_forever(),
-            subscribe_forever(room_list=room_list)
+            subscribe_forever(room_list=room_list),
+            subscribe_latest_rooms(old_room_list=room_list)
         )
     except Exception as e:
         print(f'Error while connect to biligo-live-ws: {e}')
