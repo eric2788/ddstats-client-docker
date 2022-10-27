@@ -13,7 +13,7 @@ VUP_LIST_URL = 'https://vup-json.bilibili.ooo/vup-room.json'
 ID = "dd-stats-sparanoid"
 
 
-async def get_room_list():
+async def get_room_list() -> List[int]:
     async with aiohttp.ClientSession() as session:
         async with session.get(VUP_LIST_URL) as resp:
             if resp.status != 200:
@@ -40,9 +40,17 @@ async def subscribe_forever(room_list: List[int]):
                 resp = await get_subscribed()
                 if not resp or len(resp) == 0:
                     print(f'Subscribed is empty, resubscribing...')
+                    rooms = room_list
+                    try:
+                        rooms = await get_room_list()
+                        print(f'Successfully fetched latest rooms ({len(rooms)})')
+                    except e:
+                        print(f'error while fetching latest rooms: {e}, use back old fetched room list ({len(rooms)})')
+                        rooms = room_list
+
                     while True:
                         try:
-                            await subscribe(room_list=room_list, session=session)
+                            await subscribe(room_list=rooms, session=session)
                             break
                         except Exception as e:
                             print(f'Reconnect after {5} seconds...')
