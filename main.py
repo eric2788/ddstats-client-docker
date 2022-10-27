@@ -108,6 +108,14 @@ async def main():
         print(f'Failed to get room list: {e}')
         return
 
+    if os.getenv('FORCE_SUBSCRIBE_FIRST') == 'true':
+        async with aiohttp.ClientSession() as session:
+            try:
+                await subscribe(room_list=room_list, session=session)
+                print(f'successfully force subscribed on first ({len(room_list)} rooms)')
+            except e:
+                print(f'force subscribe failed: {e}')
+
     try:
         await asyncio.gather(
             connect_forever(),
