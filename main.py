@@ -36,29 +36,18 @@ async def subscribe_forever(room_list: List[int]):
         while True:
             try:
                 await asyncio.sleep(60)
-                print(f'Checking subscribed rooms...')
                 resp = await get_subscribed()
                 if not resp or len(resp) == 0:
-                    print(f'Subscribed is empty, resubscribing...')
-                    rooms = room_list
-                    try:
-                        rooms = await get_room_list()
-                        print(f'Successfully fetched latest rooms ({len(rooms)})')
-                    except e:
-                        print(f'error while fetching latest rooms: {e}, use back old fetched room list ({len(rooms)})')
-                        rooms = room_list
-
+                    print('Subscribed is empty, resubscribing...')
                     while True:
                         try:
-                            await subscribe(room_list=rooms, session=session)
+                            await subscribe(room_list=room_list, session=session)
                             break
-                        except Exception as e:
-                            print(f'Reconnect after {5} seconds...')
+                        except Exception as ex:
+                            print(f'Error while subscribing: {ex}, reconnect after {5} seconds...')
                             sleep(5)
-                else:
-                    print(f'Subscribing {len(resp)} rooms')
-            except Exception as e:
-                print(f'Error while checking subscribing rooms: {e}')
+            except Exception as ex:
+                print(f'Error while checking subscribing rooms: {ex}')
 
 async def subscribe_latest_rooms(old_room_list: List[int] = []):
     async with aiohttp.ClientSession() as session:
@@ -66,11 +55,11 @@ async def subscribe_latest_rooms(old_room_list: List[int] = []):
         while True:
             try:
                 await asyncio.sleep(86400)
-                print(f'refetching latest rooms...')
+                print('refetching latest rooms...')
                 latest_rooms = await get_room_list()
                 # changed to only bigger than will resub
                 if latest_rooms <= last_rooms:
-                    print(f'no changes detected, skipped.')
+                    print('no changes detected, skipped.')
                     continue
                 print(f'a new change has been detected ({len(last_rooms)} -> {len(latest_rooms)}), resubscribing...')
                 last_rooms = latest_rooms
@@ -78,11 +67,11 @@ async def subscribe_latest_rooms(old_room_list: List[int] = []):
                     try:
                         await subscribe(room_list=latest_rooms, session=session)
                         break
-                    except Exception as e:
-                        print(f'Reconnect after {5} seconds...')
+                    except Exception as ex:
+                        print(f'Error while subscribing: {ex}, reconnect after {5} seconds...')
                         sleep(5)
-            except Exception as e:
-                print(f'error while fetching latest rooms: {e}')
+            except Exception as ex:
+                print(f'error while fetching latest rooms: {ex}')
 
 
 async def connect_forever():
