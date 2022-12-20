@@ -104,13 +104,19 @@ async def subscribe(room_list: List[int], session: aiohttp.ClientSession):
     payload = {"subscribes": room_list}
     headers = {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": ID
+        "Authorization": ID,
+        "Accept": "application/json"
     }
     async with session.post(f'{"https" if USE_TLS == "true" else "http"}://{BILIGO_HOST}/subscribe', data=payload, headers=headers) as resp:
-        if resp.status != 200:
-            raise Exception(f"Failed to subscribe: {resp.status}: {(await resp.json())['error']}")
-        result = await resp.json()
-        print(f'Subscribed to {len(result)} rooms')
+        try:
+            result = await resp.json()
+            if resp.status != 200:
+                raise Exception(f"Failed to subscribe: {resp.status}: {result['error']}")
+            print(f'Subscribed to {len(result)} rooms')
+        except Exception as ex:
+            print(f'Subscribe Failed: {ex}')
+            print(f'original response: {await resp.text()}')
+            raise ex
 
 
 async def main():
@@ -126,8 +132,8 @@ async def main():
             try:
                 await subscribe(room_list=room_list, session=session)
                 print(f'successfully force subscribed on first ({len(room_list)} rooms)')
-            except e:
-                print(f'force subscribe failed: {e}')
+            except Exception as ex:
+                print(f'force subscribe failed: {ex}')
 
     try:
         await asyncio.gather(
@@ -135,8 +141,8 @@ async def main():
             subscribe_forever(room_list=room_list),
             subscribe_latest_rooms(old_room_list=room_list)
         )
-    except Exception as e:
-        print(f'Error while connect to biligo-live-ws: {e}')
+    except Exception as ex:
+        print(f'Error while connect to biligo-live-ws: {ex}')
         return
 
 
