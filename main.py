@@ -7,7 +7,7 @@ import os
 
 BILIGO_HOST = os.getenv("BILIGO_WS_URL", "blive.ericlamm.xyz")
 USE_TLS = os.getenv("USE_TLS", "true")
-VUP_LIST_URL = 'https://vup-json.bilibili.ooo/vup-room.json'
+VUP_LIST_URL = 'https://vup-json.laplace.live/vup-slim.json'
 
 
 ID = "dd-stats-sparanoid"
@@ -19,7 +19,7 @@ async def get_room_list() -> List[int]:
             if resp.status != 200:
                 raise Exception(f"Failed to get room list: {resp.status}")
             vups = (await resp.json()).items()
-            return [r['room_id'] for _, r in vups if r['room_id'] > 0]
+            return [r['room'] for _, r in vups if r['room'] > 0]
 
 
 async def get_subscribed():
