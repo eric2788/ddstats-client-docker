@@ -5,8 +5,8 @@ import aiohttp
 import os
 
 
-BILIGO_HOST = os.getenv("BILIGO_WS_URL", "blive.ericlamm.xyz")
-USE_TLS = os.getenv("USE_TLS", "true")
+BILIGO_HOST = os.getenv("BILIGO_WS_URL", default="blive.ericlamm.xyz")
+USE_TLS = os.getenv("USE_TLS", default="true")
 VUP_LIST_URL = 'https://vup-json.laplace.live/vup-slim.json'
 
 
